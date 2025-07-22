@@ -12,12 +12,12 @@ const GLOBE_CONFIG = {
   width: 800,
   height: 800,
   onRender: () => {},
-  devicePixelRatio: 2,
+  devicePixelRatio: 1.5,
   phi: 0,
   theta: 0.3,
   dark: 1,
   diffuse: 0.4,
-  mapSamples: 16000,
+  mapSamples: 8000,
   mapBrightness: 1.2,
   baseColor: [1, 1, 1],
   markerColor: [1, 1, 1],
@@ -42,7 +42,7 @@ export function Globe({ className, config = GLOBE_CONFIG }) {
   const canvasRef = useRef(null);
   const pointerInteracting = useRef(null);
   const pointerInteractionMovement = useRef(0);
-
+  const isMobile = /Mobi|Android/i.test(navigator.userAgent);
   const r = useMotionValue(0);
   const rs = useSpring(r, {
     mass: 1,
@@ -77,13 +77,21 @@ export function Globe({ className, config = GLOBE_CONFIG }) {
 
     const globe = createGlobe(canvasRef.current, {
       ...config,
-      width: width * 2,
-      height: width * 2,
+      // width: width * 2,
+      // height: width * 2,
+      // onRender: (state) => {
+      //   if (!pointerInteracting.current) phi += 0.005;
+      //   state.phi = phi + rs.get();
+      //   state.width = width * 2;
+      //   state.height = width * 2;
+      width: width * (isMobile ? 1 : 1.5),
+      height: width * (isMobile ? 1 : 1.5),
+      devicePixelRatio: isMobile ? 1 : 1.5, // Lowered for performance
+      mapSamples: isMobile ? 4000 : 8000, // Reduced for performance
       onRender: (state) => {
-        if (!pointerInteracting.current) phi += 0.005;
-        state.phi = phi + rs.get();
-        state.width = width * 2;
-        state.height = width * 2;
+        state.phi = phi + rs.get(); // Only update during interaction
+        state.width = width * (isMobile ? 1 : 1.5);
+        state.height = width * (isMobile ? 1 : 1.5);
       },
     });
 
@@ -92,7 +100,7 @@ export function Globe({ className, config = GLOBE_CONFIG }) {
       globe.destroy();
       window.removeEventListener("resize", onResize);
     };
-  }, [rs, config]);
+  }, [rs, config,isMobile]);
 
   return (
     <div
